@@ -7,10 +7,17 @@ using UnityEngine.UI;
 
 public class Lobby : MonoBehaviour
 {
-    [SerializeField] GameObject prefab, canvas;
+    [SerializeField] Transform salasParent;
+    GameObject[] salas_Template;
 
     List<RoomInfo> salas;
-    readonly List<GameObject> objetos = new();
+
+    private void Awake()
+    {
+        salas_Template = new GameObject[salasParent.childCount];
+        for (int i = 0; i < salas_Template.Length; i++)
+            salas_Template[i] = salasParent.GetChild(i).gameObject;
+    }
 
     private void Update()
     {
@@ -26,34 +33,32 @@ public class Lobby : MonoBehaviour
 
     private void ResetarLista()
     {
-        foreach (var item in objetos)
-            Destroy(item);
-        objetos.Clear();
+        foreach (var item in salas_Template)
+            item.SetActive(false);
     }
 
     private void MostrarLista()
     {
         if (salas.Count == 0) print("Nenhuma sala encontrada.");
 
-        foreach (RoomInfo room in salas)
+        for (int i = 0; i < salas.Count; i++)
         {
-            var temp = Instantiate(prefab, canvas.transform);
-            temp.name = $"Sala '{room.Name}'";
-            temp.transform.position = Vector3.zero;
+            RoomInfo room = salas[i];
+            GameObject salaTemplate = salas_Template[i];
 
-            var rect = temp.GetComponentInChildren<Image>().GetComponent<RectTransform>();
-            rect.offsetMax = new(-260f, -75f);
-            rect.offsetMin = new(260f, 200f);
+            salaTemplate.name = $"Sala '{room.Name}'";
 
-            Text nomeSala = temp.transform.GetChild(0).transform.GetChild(0).GetComponent<Text>();
-            Text capacidade = temp.transform.GetChild(0).transform.GetChild(1).GetComponent<Text>();
-            Button entrarButton = temp.transform.GetChild(0).transform.GetChild(2).GetComponent<Button>();
+            var temp = salaTemplate.transform.GetChild(0);
+
+            Text nomeSala = temp.transform.GetChild(0).GetComponent<Text>();
+            Text capacidade = temp.transform.GetChild(1).GetComponent<Text>();
+            Button entrarButton = temp.transform.GetChild(2).GetComponent<Button>();
 
             nomeSala.text = room.Name;
             capacidade.text = $"{room.PlayerCount}/{room.MaxPlayers}";
             entrarButton.onClick.AddListener(() => EntrarSala(room.Name));
 
-            objetos.Add(temp);
+            salaTemplate.SetActive(true);
         }
     }
 
